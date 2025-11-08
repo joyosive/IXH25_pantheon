@@ -1,17 +1,41 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Shield, Menu, X, Home } from "lucide-react";
+import { Shield, Menu, X, Home, Wallet, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 
 const navigationItems = [
   { title: "Home", url: createPageUrl("Home"), icon: Home },
+  { title: "Demo", url: createPageUrl("Demo"), icon: Play },
 ];
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hasRedirectedToDemo, setHasRedirectedToDemo] = useState(false);
+
+  // Wagmi hooks for wallet connection
+  const { address, isConnected, isConnecting } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
+
+  const handleConnect = () => {
+    const metamaskConnector = connectors.find(c => c.name === 'MetaMask');
+    if (metamaskConnector) {
+      connect({ connector: metamaskConnector });
+    }
+  };
+
+  // Auto-redirect to demo after wallet connection
+  useEffect(() => {
+    if (isConnected && !hasRedirectedToDemo && location.pathname === '/') {
+      setHasRedirectedToDemo(true);
+      navigate('/Demo');
+    }
+  }, [isConnected, hasRedirectedToDemo, location.pathname, navigate]);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -62,24 +86,56 @@ export default function Layout({ children }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-1">
-              {navigationItems.map((item) => {
-                const isActive = location.pathname === item.url;
-                return (
-                  <Link
-                    key={item.title}
-                    to={item.url}
-                    className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${
-                      isActive
-                        ? 'bg-purple-500/20 text-purple-300 glow-border'
-                        : 'text-gray-300 hover:text-purple-300 hover:bg-purple-500/10'
-                    }`}
+            <div className="hidden md:flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                {navigationItems
+                  .filter((item) => !(isConnected && item.title === "Demo")) // Hide Demo button when connected
+                  .map((item) => {
+                    const isActive = location.pathname === item.url;
+                    return (
+                      <Link
+                        key={item.title}
+                        to={item.url}
+                        className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${
+                          isActive
+                            ? 'bg-purple-500/20 text-purple-300 glow-border'
+                            : 'text-gray-300 hover:text-purple-300 hover:bg-purple-500/10'
+                        }`}
+                      >
+                        <item.icon className="w-4 h-4" />
+                        <span className="text-sm font-medium">{item.title}</span>
+                      </Link>
+                    );
+                  })}
+              </div>
+
+              {/* MetaMask Connection Button */}
+              {isConnected ? (
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-1 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-lg backdrop-blur">
+                    <span className="text-xs text-green-300 font-mono">
+                      {address?.slice(0, 6)}...{address?.slice(-4)}
+                    </span>
+                  </div>
+                  <Button
+                    onClick={disconnect}
+                    variant="outline"
+                    size="sm"
+                    className="border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-purple-200 backdrop-blur"
                   >
-                    <item.icon className="w-4 h-4" />
-                    <span className="text-sm font-medium">{item.title}</span>
-                  </Link>
-                );
-              })}
+                    Disconnect
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleConnect}
+                  disabled={isConnecting}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 glow-border"
+                >
+                  <Wallet className="w-4 h-4 mr-2" />
+                  {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                </Button>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -98,24 +154,26 @@ export default function Layout({ children }) {
         {mobileMenuOpen && (
           <div className="md:hidden nav-blur border-t border-purple-500/20">
             <div className="px-4 py-4 space-y-2">
-              {navigationItems.map((item) => {
-                const isActive = location.pathname === item.url;
-                return (
-                  <Link
-                    key={item.title}
-                    to={item.url}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`block px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${
-                      isActive
-                        ? 'bg-purple-500/20 text-purple-300'
-                        : 'text-gray-300 hover:bg-purple-500/10'
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.title}</span>
-                  </Link>
-                );
-              })}
+              {navigationItems
+                .filter((item) => !(isConnected && item.title === "Demo")) // Hide Demo button when connected
+                .map((item) => {
+                  const isActive = location.pathname === item.url;
+                  return (
+                    <Link
+                      key={item.title}
+                      to={item.url}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`block px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${
+                        isActive
+                          ? 'bg-purple-500/20 text-purple-300'
+                          : 'text-gray-300 hover:bg-purple-500/10'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span className="font-medium">{item.title}</span>
+                    </Link>
+                  );
+                })}
             </div>
           </div>
         )}

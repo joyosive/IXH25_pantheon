@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Shield, Lock, Zap, Globe, Check, Sparkles } from "lucide-react";
+import { Shield, Lock, Zap, Globe, Check, Sparkles, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function HomePage() {
@@ -57,9 +57,15 @@ export default function HomePage() {
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-12">
-              Zero-knowledge proofs enable trustless conditional payments. 
+              Zero-knowledge proofs enable trustless conditional payments.
               Prove you deserve the payment without showing why you deserve it.
             </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button variant="outline" className="border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-purple-200 px-8 py-3 text-lg">
+                Learn More
+              </Button>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -138,7 +144,7 @@ export default function HomePage() {
               How We Solve It
             </h2>
             <p className="text-xl text-gray-400">
-              Zero-knowledge proofs + XRPL = The future of conditional payments
+              Zero-knowledge proofs + XRPL-EVM = The future of conditional payments
             </p>
           </motion.div>
 
@@ -166,28 +172,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-black/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-400">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
